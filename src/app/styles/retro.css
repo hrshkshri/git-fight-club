@@ -1,0 +1,36 @@
+
+
+.pixel-text {
+  font-family: 'Press Start 2P', cursive;
+  letter-spacing: 2px;
+  text-shadow: 
+    4px 4px 0px #ff00ff,
+    8px 8px 0px #00ffff;
+}
+
+/* Neon glow */
+.neon-glow {
+  text-shadow: 
+    0 0 10px #00ff00,
+    0 0 20px #00ff00,
+    0 0 30px #00ff00;
+}
+
+/* Screen shake animation */
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-5px, -5px); }
+  50% { transform: translate(5px, 5px); }
+  75% { transform: translate(-5px, 5px); }
+}
+
+.screen-shake {
+  animation: shake 0.15s ease-in-out;
+}
+
+/* Pixel borders */
+.pixel-border {
+  border: 4px solid;
+  border-image-slice: 2;
+  image-rendering: pixelated;
+}
