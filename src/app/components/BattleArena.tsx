@@ -154,7 +154,26 @@ export default function BattleArena({ battle }: { battle: Battle }) {
       </div>
 
       {/* Arena Sprites Area */}
-      <div className="flex max-w-4xl w-full justify-between items-end px-8 md:px-24 mb-12 h-64 md:h-96 border-b-4 border-[rgba(0,255,0,0.5)] bg-gradient-to-t from-[rgba(0,255,0,0.1)] to-transparent">
+      <div className="flex max-w-4xl w-full justify-between items-end px-8 md:px-24 mb-12 h-64 md:h-96 border-b-4 border-[rgba(0,255,0,0.5)] bg-gradient-to-t from-[rgba(0,255,0,0.1)] to-transparent relative overflow-hidden">
+          {/* Energy Beams / Projectiles */}
+          {activeAttacker === 1 && (
+             <motion.div 
+               className="absolute top-1/2 left-32 w-1/2 h-8 bg-neon-cyan shadow-[0_0_30px_#00ffff] rounded-r-full z-10"
+               initial={{ scaleX: 0, opacity: 1, originX: 0 }}
+               animate={{ scaleX: [0, 1.5, 0], x: [0, 200, 300], opacity: [1, 1, 0] }}
+               transition={{ duration: 0.3, ease: 'easeOut' }}
+             />
+          )}
+
+          {activeAttacker === 2 && (
+             <motion.div 
+               className="absolute top-1/2 right-32 w-1/2 h-8 bg-red-500 shadow-[0_0_30px_#ff0000] rounded-l-full z-10"
+               initial={{ scaleX: 0, opacity: 1, originX: 1 }}
+               animate={{ scaleX: [0, 1.5, 0], x: [0, -200, -300], opacity: [1, 1, 0] }}
+               transition={{ duration: 0.3, ease: 'easeOut' }}
+             />
+          )}
+
           {/* Player 1 Sprite */}
           <CharacterSprite 
             isAttacking={activeAttacker === 1}

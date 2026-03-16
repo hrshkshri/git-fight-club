@@ -32,8 +32,9 @@ export default function CharacterSprite({
         <Image
           src={spriteSrc}
           alt={`Player Sprite ${color}`}
-          fill
-          className="object-contain pixelated pointer-events-none"
+          width={256}
+          height={256}
+          className="w-full h-full object-contain pixelated pointer-events-none mix-blend-screen"
           priority
         />
     </motion.div>
