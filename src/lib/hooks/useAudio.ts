@@ -6,20 +6,30 @@ export default function useAudio() {
   const contextRef = useRef<AudioContext | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
+  const initContext = () => {
+    if (!contextRef.current) {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtx) {
+        contextRef.current = new AudioCtx();
+      }
+    }
+    if (contextRef.current?.state === 'suspended') {
+      contextRef.current.resume();
+    }
+    return contextRef.current;
+  };
+
   useEffect(() => {
-    // Initialize user context precisely once on user interaction context where possible
-    contextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // Attempt init on mount, though it may be suspended by the browser.
+    initContext();
   }, []);
 
   const playSound = (type: 'punch' | 'explosion' | 'victory' | 'defeat') => {
-    if (!soundEnabled || !contextRef.current) return;
+    if (!soundEnabled) return;
 
-    // Reactivate suspended audio context if needed
-    if (contextRef.current.state === 'suspended') {
-      contextRef.current.resume();
-    }
+    const ctx = initContext();
+    if (!ctx) return;
 
-    const ctx = contextRef.current;
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -108,10 +118,11 @@ export default function useAudio() {
   return {
     playSound,
     soundEnabled,
+    initAudio: () => {
+      initContext();
+    },
     toggleSound: () => {
-      if (contextRef.current?.state === 'suspended') {
-        contextRef.current.resume();
-      }
+      initContext();
       setSoundEnabled(!soundEnabled);
     }
   };

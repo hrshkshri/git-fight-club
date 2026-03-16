@@ -22,7 +22,7 @@ export default function BattleArena({ battle }: { battle: Battle }) {
   const [combatLog, setCombatLog] = useState<Array<{ player: 1 | 2; move: string; damage: number }>>([]);
   const [activeAttacker, setActiveAttacker] = useState<1 | 2 | null>(null);
 
-  const { playSound, soundEnabled, toggleSound } = useAudio();
+  const { playSound, soundEnabled, toggleSound, initAudio } = useAudio();
 
   useEffect(() => {
     if (gameState !== 'battle') return;
@@ -71,6 +71,13 @@ export default function BattleArena({ battle }: { battle: Battle }) {
     }
   }, [gameState, currentTurn, battle.battleSequence, playSound]);
 
+  useEffect(() => {
+    if (gameState === 'intro') {
+      const timer = setTimeout(() => setGameState('battle'), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState]);
+
   if (gameState === 'victory') {
     return <VictoryScreen battle={battle} />;
   }
@@ -78,19 +85,21 @@ export default function BattleArena({ battle }: { battle: Battle }) {
   if (gameState === 'intro') {
     return (
       <motion.div
-        className="min-h-screen bg-black text-white flex flex-col items-center justify-center space-y-12 fixed inset-0 z-50 p-4 font-display text-center"
+        className="min-h-screen w-full bg-black text-white flex flex-col items-center justify-center space-y-12 absolute inset-0 z-[100] p-4 font-display text-center m-0"
         animate={{ opacity: [0.8, 1, 0.8] }}
         transition={{ duration: 1.5, repeat: Infinity }}
-        onAnimationComplete={() => {
-           setTimeout(() => setGameState('battle'), 2500);
+        onClick={() => {
+          // Force audio context initialization on user interaction (fixes Safari/Chrome autoplay policy)
+          initAudio();
         }}
       >
-        <h2 className="text-5xl md:text-8xl lg:text-9xl font-black pixel-text text-neon-magenta neon-glow">GET READY</h2>
-        <div className="text-2xl md:text-4xl flex flex-col md:flex-row items-center gap-6 mt-12 bg-gray-900 border-4 border-white pixel-border p-8">
-            <span className="text-neon-cyan truncate max-w-xs">{battle.player1.username}</span> 
-            <span className="text-neon-yellow italic">VS</span> 
-            <span className="text-red-500 truncate max-w-xs">{battle.player2.username}</span>
+        <h2 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-black pixel-text text-neon-magenta neon-glow">GET READY</h2>
+        <div className="text-xl sm:text-2xl md:text-4xl flex flex-col items-center gap-6 mt-12 bg-gray-900 border-4 border-white pixel-border p-8 w-full max-w-2xl mx-auto">
+            <span className="text-neon-cyan truncate max-w-full text-center px-4">{battle.player1.username}</span> 
+            <span className="text-neon-yellow italic drop-shadow-[0_0_10px_yellow]">VS</span> 
+            <span className="text-red-500 truncate max-w-full text-center px-4">{battle.player2.username}</span>
         </div>
+        <p className="text-gray-500 animate-pulse mt-8 text-sm">Click anywhere to start audio...</p>
       </motion.div>
     );
   }
@@ -100,7 +109,7 @@ export default function BattleArena({ battle }: { battle: Battle }) {
     : { transform: 'translate(0px, 0px)' };
 
   return (
-    <div className="min-h-screen bg-transparent text-white font-mono flex flex-col transition-transform duration-75" style={shakeStyle}>
+    <div className="min-h-screen w-full bg-transparent text-white font-mono flex flex-col transition-transform duration-75 relative" style={shakeStyle}>
       {/* Sound Toggle */}
       <button
         onClick={toggleSound}
