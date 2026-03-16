@@ -22,6 +22,11 @@ body {
   min-height: 100vh;
 }
 
+.pixelated {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
 /* Grid background */
 body::before {
   content: '';

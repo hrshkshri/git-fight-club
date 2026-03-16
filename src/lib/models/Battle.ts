@@ -6,12 +6,22 @@ export interface IBattle {
     powerLevel: number;
     maxHp: number;
     finalHp: number;
+    stats?: {
+      commits: number;
+      repos: number;
+      followers: number;
+    }
   };
   player2: {
     username: string;
     powerLevel: number;
     maxHp: number;
     finalHp: number;
+    stats?: {
+      commits: number;
+      repos: number;
+      followers: number;
+    }
   };
   battleSequence: Array<{
     turn: number;
@@ -28,13 +38,23 @@ const battleSchema = new mongoose.Schema<IBattle>({
     username: { type: String, required: true },
     powerLevel: { type: Number, required: true },
     maxHp: { type: Number, default: 100 },
-    finalHp: { type: Number }
+    finalHp: { type: Number },
+    stats: {
+      commits: Number,
+      repos: Number,
+      followers: Number
+    }
   },
   player2: {
     username: { type: String, required: true },
     powerLevel: { type: Number, required: true },
     maxHp: { type: Number, default: 100 },
-    finalHp: { type: Number }
+    finalHp: { type: Number },
+    stats: {
+      commits: Number,
+      repos: Number,
+      followers: Number
+    }
   },
   battleSequence: [
     {

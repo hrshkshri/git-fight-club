@@ -5,6 +5,7 @@ import HealthBar from './HealthBar';
 import CombatLog from './CombatLog';
 import VictoryScreen from './VictoryScreen';
 import useAudio from '@/lib/hooks/useAudio';
+import CharacterSprite from './CharacterSprite';
 
 interface Battle {
   player1: { username: string; powerLevel: number; maxHp: number; finalHp: number };
@@ -21,6 +22,7 @@ export default function BattleArena({ battle }: { battle: Battle }) {
   const [screenShake, setScreenShake] = useState(false);
   const [combatLog, setCombatLog] = useState<Array<{ player: 1 | 2; move: string; damage: number }>>([]);
   const [activeAttacker, setActiveAttacker] = useState<1 | 2 | null>(null);
+  const [activeDefender, setActiveDefender] = useState<1 | 2 | null>(null);
 
   const { playSound, soundEnabled, toggleSound, initAudio } = useAudio();
 
@@ -36,13 +38,17 @@ export default function BattleArena({ battle }: { battle: Battle }) {
         const damage = turn.damage;
 
         setActiveAttacker(turn.player);
+        const defender = turn.player === 1 ? 2 : 1;
+        
+        // Delay defender hit reaction slightly to sync with attack lunging
+        setTimeout(() => setActiveDefender(defender), 150);
 
         // Play sound effect based on text
         playSound(turn.move.includes('Power') || turn.move.includes('Strike') || turn.move.includes('Slam') ? 'explosion' : 'punch');
 
         // Screen shake
-        setScreenShake(true);
-        setTimeout(() => setScreenShake(false), 200);
+        setTimeout(() => setScreenShake(true), 150);
+        setTimeout(() => setScreenShake(false), 350);
 
         // Apply damage visually
         if (turn.player === 1) {
@@ -57,10 +63,13 @@ export default function BattleArena({ battle }: { battle: Battle }) {
         // Advance turn counter
         setCurrentTurn(nextTurn);
         
-        // Reset attacker animation state
-        setTimeout(() => setActiveAttacker(null), 500); 
+        // Reset animation states
+        setTimeout(() => {
+          setActiveAttacker(null);
+          setActiveDefender(null);
+        }, 500); 
 
-      }, 2000); // 2 second delay between turns
+      }, 2500); // 2.5 second delay between turns
       return () => clearTimeout(timer);
     } else {
       const timer = setTimeout(() => {
@@ -145,24 +154,26 @@ export default function BattleArena({ battle }: { battle: Battle }) {
       </div>
 
       {/* Arena Sprites Area */}
-      <div className="flex-1 flex justify-between items-center px-4 md:px-32 relative mt-4 md:mt-12 max-w-5xl mx-auto w-full">
-          {/* Mock Sprite 1 */}
-          <motion.div 
-             className="w-24 h-32 md:w-48 md:h-64 bg-neon-cyan border-4 border-white pixel-border shadow-[0_0_30px_#00ffff]"
-             animate={activeAttacker === 1 ? { x: [0, 100, 0], scale: [1, 1.2, 1] } : { y: [0, -10, 0] }}
-             transition={activeAttacker === 1 ? { duration: 0.3 } : { duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+      <div className="flex max-w-4xl w-full justify-between items-end px-8 md:px-24 mb-12 h-64 md:h-96 border-b-4 border-[rgba(0,255,0,0.5)] bg-gradient-to-t from-[rgba(0,255,0,0.1)] to-transparent">
+          {/* Player 1 Sprite */}
+          <CharacterSprite 
+            isAttacking={activeAttacker === 1}
+            isHit={activeDefender === 1}
+            color="cyan"
+            facingLeft={false}
           />
           
-          {/* Mock Sprite 2 */}
-          <motion.div 
-             className="w-24 h-32 md:w-48 md:h-64 bg-red-600 border-4 border-white pixel-border shadow-[0_0_30px_#ff0000]"
-             animate={activeAttacker === 2 ? { x: [0, -100, 0], scale: [1, 1.2, 1] } : { y: [0, -10, 0], transition: { delay: 0.5 } }}
-             transition={activeAttacker === 2 ? { duration: 0.3 } : { duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          {/* Player 2 Sprite */}
+          <CharacterSprite 
+            isAttacking={activeAttacker === 2}
+            isHit={activeDefender === 2}
+            color="red"
+            facingLeft={true}
           />
       </div>
 
       {/* Combat Log Drawer */}
-      <div className="pb-8 px-4 w-full">
+      <div className="w-full max-w-4xl px-4 flex-1 pb-8 flex flex-col justify-end">
         <CombatLog log={combatLog} />
       </div>
     </div>

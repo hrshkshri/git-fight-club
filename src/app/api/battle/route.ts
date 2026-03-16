@@ -48,7 +48,12 @@ export async function POST(request: NextRequest) {
         maxHp: 100,
         finalHp: Math.max(0, 100 - battleSequence
           .filter(t => t.player === 2)
-          .reduce((sum, t) => sum + t.damage, 0))
+          .reduce((sum, t) => sum + t.damage, 0)),
+        stats: {
+          commits: Math.round(user1Data.estimatedCommits),
+          repos: user1Data.publicRepos,
+          followers: user1Data.followers
+        }
       },
       player2: {
         username: player2Username,
@@ -56,7 +61,12 @@ export async function POST(request: NextRequest) {
         maxHp: 100,
         finalHp: Math.max(0, 100 - battleSequence
           .filter(t => t.player === 1)
-          .reduce((sum, t) => sum + t.damage, 0))
+          .reduce((sum, t) => sum + t.damage, 0)),
+        stats: {
+          commits: Math.round(user2Data.estimatedCommits),
+          repos: user2Data.publicRepos,
+          followers: user2Data.followers
+        }
       },
       battleSequence,
       winner
