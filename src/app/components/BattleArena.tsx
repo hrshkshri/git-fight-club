@@ -23,6 +23,7 @@ export default function BattleArena({ battle }: { battle: Battle }) {
   const [combatLog, setCombatLog] = useState<Array<{ player: 1 | 2; move: string; damage: number }>>([]);
   const [activeAttacker, setActiveAttacker] = useState<1 | 2 | null>(null);
   const [activeDefender, setActiveDefender] = useState<1 | 2 | null>(null);
+  const [activePopup, setActivePopup] = useState<{ attacker: 1 | 2; move: string; damage: number } | null>(null);
 
   const { playSound, soundEnabled, toggleSound, initAudio } = useAudio();
 
@@ -39,6 +40,9 @@ export default function BattleArena({ battle }: { battle: Battle }) {
 
         setActiveAttacker(turn.player);
         const defender = turn.player === 1 ? 2 : 1;
+        
+        // Setup popups
+        setActivePopup({ attacker: turn.player, move: turn.move, damage: turn.damage });
         
         // Delay defender hit reaction slightly to sync with attack lunging
         setTimeout(() => setActiveDefender(defender), 150);
@@ -67,7 +71,8 @@ export default function BattleArena({ battle }: { battle: Battle }) {
         setTimeout(() => {
           setActiveAttacker(null);
           setActiveDefender(null);
-        }, 500); 
+          setActivePopup(null);
+        }, 1000); 
 
       }, 2500); // 2.5 second delay between turns
       return () => clearTimeout(timer);
@@ -173,6 +178,54 @@ export default function BattleArena({ battle }: { battle: Battle }) {
                transition={{ duration: 0.3, ease: 'easeOut' }}
              />
           )}
+
+          {/* Floating Combat Text for Player 1 (Attacking) or Player 2 (Defending) */}
+          <div className="absolute top-0 left-0 w-1/2 h-full flex items-center justify-center pointer-events-none z-20">
+            {activePopup && activePopup.attacker === 1 && (
+               <motion.div 
+                 initial={{ y: 50, opacity: 0, scale: 0.5 }}
+                 animate={{ y: -50, opacity: [0, 1, 1, 0], scale: 1.5 }}
+                 transition={{ duration: 1 }}
+                 className="text-neon-cyan font-display text-xl z-50 pixel-text text-center drop-shadow-[0_0_10px_#000]"
+               >
+                 {activePopup.move}!
+               </motion.div>
+             )}
+             {activePopup && activePopup.attacker === 2 && (
+               <motion.div 
+                 initial={{ y: 0, opacity: 0, scale: 0.5 }}
+                 animate={{ y: -100, opacity: [0, 1, 1, 0], scale: 2 }}
+                 transition={{ duration: 1 }}
+                 className="text-red-500 font-display text-4xl z-50 pixel-text drop-shadow-[0_0_10px_#000]"
+               >
+                 -{activePopup.damage} HP
+               </motion.div>
+             )}
+          </div>
+
+          {/* Floating Combat Text for Player 2 (Attacking) or Player 1 (Defending) */}
+          <div className="absolute top-0 right-0 w-1/2 h-full flex items-center justify-center pointer-events-none z-20">
+             {activePopup && activePopup.attacker === 2 && (
+               <motion.div 
+                 initial={{ y: 50, opacity: 0, scale: 0.5 }}
+                 animate={{ y: -50, opacity: [0, 1, 1, 0], scale: 1.5 }}
+                 transition={{ duration: 1 }}
+                 className="text-red-500 font-display text-xl z-50 pixel-text text-center drop-shadow-[0_0_10px_#000]"
+               >
+                 {activePopup.move}!
+               </motion.div>
+             )}
+             {activePopup && activePopup.attacker === 1 && (
+               <motion.div 
+                 initial={{ y: 0, opacity: 0, scale: 0.5 }}
+                 animate={{ y: -100, opacity: [0, 1, 1, 0], scale: 2 }}
+                 transition={{ duration: 1 }}
+                 className="text-red-500 font-display text-4xl z-50 pixel-text drop-shadow-[0_0_10px_#000]"
+               >
+                 -{activePopup.damage} HP
+               </motion.div>
+             )}
+          </div>
 
           {/* Player 1 Sprite */}
           <CharacterSprite 
