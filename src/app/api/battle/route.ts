@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/connect';
 import { Battle } from '@/lib/models/Battle';
-import { calculatePowerLevel } from '@/lib/services/scoring';
+import { calculatePowerLevel, calculateMaxHp } from '@/lib/services/scoring';
 import { generateBattleSequence } from '@/lib/services/battle';
 import { fetchGitHubUser } from '@/lib/services/github';
 
@@ -26,17 +26,19 @@ export async function POST(request: NextRequest) {
       fetchGitHubUser(player2Username)
     ]);
 
-    // Calculate power levels
+    // Calculate power levels and scaled HP
     const powerLevel1 = calculatePowerLevel(user1Data);
     const powerLevel2 = calculatePowerLevel(user2Data);
+    const maxHp1 = calculateMaxHp(powerLevel1);
+    const maxHp2 = calculateMaxHp(powerLevel2);
 
-    // Determine winner
-    const winner = powerLevel1 >= powerLevel2 ? 1 : 2;
+    // Determine winner (strictly greater; ties go to player2 to avoid P1 bias)
+    const winner = powerLevel1 > powerLevel2 ? 1 : 2;
 
-    // Generate battle sequence
+    // Generate battle sequence with scaled HP
     const battleSequence = generateBattleSequence(
-      { username: player1Username, powerLevel: powerLevel1 },
-      { username: player2Username, powerLevel: powerLevel2 },
+      { username: player1Username, powerLevel: powerLevel1, maxHp: maxHp1 },
+      { username: player2Username, powerLevel: powerLevel2, maxHp: maxHp2 },
       winner
     );
 
@@ -45,8 +47,8 @@ export async function POST(request: NextRequest) {
       player1: {
         username: player1Username,
         powerLevel: powerLevel1,
-        maxHp: 100,
-        finalHp: Math.max(0, 100 - battleSequence
+        maxHp: maxHp1,
+        finalHp: Math.max(0, maxHp1 - battleSequence
           .filter(t => t.player === 2)
           .reduce((sum, t) => sum + t.damage, 0)),
         stats: {
@@ -58,8 +60,8 @@ export async function POST(request: NextRequest) {
       player2: {
         username: player2Username,
         powerLevel: powerLevel2,
-        maxHp: 100,
-        finalHp: Math.max(0, 100 - battleSequence
+        maxHp: maxHp2,
+        finalHp: Math.max(0, maxHp2 - battleSequence
           .filter(t => t.player === 1)
           .reduce((sum, t) => sum + t.damage, 0)),
         stats: {

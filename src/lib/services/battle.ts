@@ -1,6 +1,7 @@
 interface Player {
   username: string;
   powerLevel: number;
+  maxHp: number;
 }
 
 export interface Turn {
@@ -25,8 +26,8 @@ const MOVES = [
 
 export function generateBattleSequence(player1: Player, player2: Player, winner: 1 | 2): Turn[] {
   const sequence: Turn[] = [];
-  let hp1 = 100;
-  let hp2 = 100;
+  let hp1 = player1.maxHp;
+  let hp2 = player2.maxHp;
   
   // Target 6 to 8 turns of battle
   const numTurns = 6 + Math.floor(Math.random() * 3); 
@@ -50,9 +51,11 @@ export function generateBattleSequence(player1: Player, player2: Player, winner:
       damage = defender === 1 ? hp1 : hp2;
     } else {
       const power = activePlayer === 1 ? player1.powerLevel : player2.powerLevel;
-      // Normal attack: scales based on power level plus randomness
-      const baseDamage = 10 + Math.floor((power / 100) * 15);
-      damage = baseDamage + Math.floor(Math.random() * 10);
+      const attackerMaxHp = activePlayer === 1 ? player1.maxHp : player2.maxHp;
+      // Base damage: ~12-14% of attacker's maxHp, scaled by power level
+      const baseDamage = Math.round(attackerMaxHp * (0.10 + (power / 100) * 0.06));
+      // Small variance: ±3 pts — keeps power gap decisive
+      damage = baseDamage + Math.floor(Math.random() * 6) - 2;
       
       // Prevent premature death unless it's the winner
       if (defender === 1 && hp1 - damage <= 0) {
