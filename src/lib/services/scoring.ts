@@ -1,26 +1,33 @@
 import { GitHubStats } from './github';
 
 export function calculatePowerLevel(stats: GitHubStats): number {
-  // Formula: Power Level = (commits × 0.25) + (public_ratio × 0.30) + (consistency × 0.20) + (quality × 0.15) + (influence × 0.10)
-  
-  // 1. Commits (Max 100)
-  const commitsScore = Math.min(stats.estimatedCommits / 50, 100) * 0.25;
-  
-  // 2. Public Repositories (Max 100)
-  const reposScore = Math.min(stats.publicRepos * 3, 100) * 0.30;
-  
-  // 3. Consistency (Age in days, max 100 points for ~5 years)
-  const consistencyScore = Math.min(stats.accountAgeDays / 18, 100) * 0.20;
-  
-  // 4. Code Quality (Randomized slightly for dynamic battle variation)
-  // In a real app, this could be PR approval rates or test coverage
-  const qualityScore = (50 + Math.random() * 50) * 0.15; 
-  
-  // 5. Influence (Followers, max 100 points for ~100 followers)
-  const influenceScore = Math.min(stats.followers * 2, 100) * 0.10;
+  // Each raw stat used exactly ONCE — no circular dependencies.
 
-  const totalScore = Math.floor(commitsScore + reposScore + consistencyScore + qualityScore + influenceScore);
-  
-  // Ensure power level is mapped cleanly from 1 to 100
-  return Math.max(1, Math.min(100, totalScore));
+  // 1. Public Repositories [30%]
+  //    Sqrt scaling avoids rich-get-richer. Max at ~100 repos.
+  const repoScore = Math.min(Math.sqrt(stats.publicRepos) / 10, 1) * 30;
+
+  // 2. Followers [35%]
+  //    Log scale because followers span 0 → 100k+.
+  //    0 followers = 0 pts, 100 = 17.5, 1 000 = 26, 10 000 = 35 (max).
+  const followersScore = Math.min(Math.log10(stats.followers + 1) / 4, 1) * 35;
+
+  // 3. Account age / consistency [20%]
+  //    Full marks at 5 years (1 825 days).
+  const ageScore = Math.min(stats.accountAgeDays / 1825, 1) * 20;
+
+  // 4. Engagement rate [15%]
+  //    Followers per repo — rewards repos that attract community attention.
+  //    Full marks at 50+ followers per public repo.
+  const fpr = stats.publicRepos > 0 ? stats.followers / stats.publicRepos : 0;
+  const engagementScore = Math.min(fpr / 50, 1) * 15;
+
+  const total = repoScore + followersScore + ageScore + engagementScore;
+  return Math.max(1, Math.min(100, Math.floor(total)));
+}
+
+// HP scales with power so the stronger developer is harder to defeat.
+// Range: power=1 → 72 HP,  power=100 → 122 HP.
+export function calculateMaxHp(powerLevel: number): number {
+  return Math.round(72 + powerLevel * 0.5);
 }

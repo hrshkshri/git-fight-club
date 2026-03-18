@@ -2,41 +2,77 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 
-export default function CharacterSprite({ 
-  isAttacking, 
-  isHit, 
-  color,
-  facingLeft 
-}: { 
+interface Props {
   isAttacking: boolean;
   isHit: boolean;
   color: 'cyan' | 'red';
   facingLeft: boolean;
-}) {
-  const spriteSrc = color === 'cyan' ? '/sprites/p1.png' : '/sprites/p2.png';
-  const shadowColor = color === 'cyan' ? 'drop-shadow-[0_0_20px_rgba(0,255,255,0.7)]' : 'drop-shadow-[0_0_20px_rgba(255,0,0,0.7)]';
-  const hitFlash = isHit ? 'brightness-[3] contrast-150 rotate-[-15deg]' : '';
+}
+
+export default function CharacterSprite({ isAttacking, isHit, color, facingLeft }: Props) {
+  const src = color === 'cyan' ? '/sprites/p1.png' : '/sprites/p2.png';
+  const glowPrimary  = color === 'cyan' ? '#4488ff' : '#ff3333';
+  const glowSecondary = color === 'cyan' ? 'rgba(0,80,255,0.5)' : 'rgba(255,40,40,0.5)';
+
+  const baseFilter = `drop-shadow(0 0 12px ${glowPrimary}) drop-shadow(0 0 30px ${glowSecondary})`;
+  const hitFilter  = `brightness(8) contrast(3) drop-shadow(0 0 20px #fff)`;
 
   return (
-    <motion.div 
-      className={`relative w-48 h-48 md:w-64 md:h-64 flex flex-col items-center justify-end ${facingLeft ? 'scale-x-[-1]' : ''} ${shadowColor} ${hitFlash}`}
+    <motion.div
+      style={{
+        position: 'relative',
+        width: 'clamp(120px, 14vw, 200px)',
+        height: 'clamp(120px, 14vw, 200px)',
+        transformOrigin: 'bottom center',
+        transform: facingLeft ? 'scaleX(-1)' : 'scaleX(1)',
+      }}
       animate={{
-        y: isAttacking ? 0 : [0, -10, 0], // Bobbing idle animation
-        x: isAttacking ? (facingLeft ? -100 : 100) : 0, // Deep lunge forward
+        y: isAttacking ? 0 : [0, -8, 0],
+        x: isAttacking
+          ? (facingLeft ? -80 : 80)
+          : 0,
       }}
       transition={{
-        y: isAttacking ? { duration: 0.1 } : { duration: 1.5, repeat: Infinity, ease: "easeInOut" },
-        x: isAttacking ? { type: "spring", stiffness: 300, damping: 15 } : { duration: 0.2 },
+        y: isAttacking
+          ? { duration: 0.08 }
+          : { duration: 1.8, repeat: Infinity, ease: 'easeInOut' },
+        x: isAttacking
+          ? { type: 'spring', stiffness: 350, damping: 12 }
+          : { duration: 0.3 },
       }}
     >
-        <Image
-          src={spriteSrc}
-          alt={`Player Sprite ${color}`}
-          width={256}
-          height={256}
-          className="w-full h-full object-contain pixelated pointer-events-none mix-blend-screen"
-          priority
-        />
+      {/* Shadow on floor */}
+      <motion.div
+        style={{
+          position: 'absolute',
+          bottom: -6,
+          left: '15%',
+          right: '15%',
+          height: 8,
+          borderRadius: '50%',
+          background: glowPrimary,
+          filter: 'blur(6px)',
+          opacity: 0.4,
+        }}
+        animate={{
+          scaleX: isAttacking ? 1.3 : [0.8, 0.6, 0.8],
+          opacity: isAttacking ? 0.6 : [0.4, 0.25, 0.4],
+        }}
+        transition={{ duration: 1.8, repeat: isAttacking ? 0 : Infinity, ease: 'easeInOut' }}
+      />
+
+      <Image
+        src={src}
+        alt={`Player ${color}`}
+        fill
+        className="object-contain pixelated pointer-events-none"
+        style={{
+          mixBlendMode: 'screen',
+          filter: isHit ? hitFilter : baseFilter,
+          transition: 'filter 0.08s',
+        }}
+        priority
+      />
     </motion.div>
   );
 }
